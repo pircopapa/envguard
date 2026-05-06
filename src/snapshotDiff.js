@@ -42,4 +42,22 @@ function hasChangedSinceSnapshot(envPath, snapshotDir = '.envguard/snapshots') {
   );
 }
 
-module.exports = { diffAgainstSnapshot, hasChangedSinceSnapshot };
+/**
+ * Returns a human-readable summary of changes since the last snapshot
+ * @param {string} envPath
+ * @param {string} snapshotDir
+ * @returns {string}
+ */
+function diffSummary(envPath, snapshotDir = '.envguard/snapshots') {
+  const { diff, snapshotMeta } = diffAgainstSnapshot(envPath, snapshotDir);
+  const lines = [`Snapshot taken at: ${snapshotMeta.createdAt}`];
+  if (diff.added.length > 0) lines.push(`  Added:   ${diff.added.join(', ')}`);
+  if (diff.removed.length > 0) lines.push(`  Removed: ${diff.removed.join(', ')}`);
+  if (diff.changed.length > 0) lines.push(`  Changed: ${diff.changed.join(', ')}`);
+  if (diff.added.length === 0 && diff.removed.length === 0 && diff.changed.length === 0) {
+    lines.push('  No changes detected.');
+  }
+  return lines.join('\n');
+}
+
+module.exports = { diffAgainstSnapshot, hasChangedSinceSnapshot, diffSummary };
