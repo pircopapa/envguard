@@ -27,6 +27,12 @@ describe('formatValidation', () => {
     const output = formatValidation('ci', result);
     expect(output).toContain('! DATABASE_URL');
   });
+
+  test('includes env name in output for invalid result', () => {
+    const result = { valid: false, missing: ['TOKEN'], extra: [], empty: [] };
+    const output = formatValidation('staging', result);
+    expect(output).toContain('[staging]');
+  });
 });
 
 describe('formatDiff', () => {
@@ -57,5 +63,13 @@ describe('formatDiff', () => {
     expect(output).toContain('~ PORT');
     expect(output).toContain('"3000"');
     expect(output).toContain('"8080"');
+  });
+
+  test('includes env names in diff header', () => {
+    const envA = { PORT: '3000' };
+    const envB = { PORT: '8080' };
+    const output = formatDiff(envA, envB, 'dev', 'prod');
+    expect(output).toContain('dev');
+    expect(output).toContain('prod');
   });
 });
