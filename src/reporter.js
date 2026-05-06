@@ -1,70 +1,71 @@
 /**
- * Formats validation and diff results into human-readable output.
- */
-
-const { diffEnvs } = require('./diff');
-
-/**
- * Format a single ValidationResult into a readable string.
- * @param {string} name - label for this env
- * @param {import('./validator').ValidationResult} result
+ * Format validation results for human-readable output
+ * @param {object} results - output from validateEnv or validateAll
  * @returns {string}
  */
-function formatValidation(name, result) {
-  const lines = [`[${name}] ${result.valid ? '✓ valid' : '✗ invalid'}'];
-
-  if (result.missing.length > 0) {
-    lines.push(`  Missing keys (${result.missing.length}):`);
-    result.missing.forEach((k) => lines.push(`    - ${k}`));
+function formatValidation(results) {
+  if (!results || Object.keys(results).length === 0) {
+    return '✅ All validations passed.';
   }
 
-  if (result.extra.length > 0) {
-    lines.push(`  Extra keys (${result.extra.length}):`);
-    result.extra.forEach((k) => lines.push(`    + ${k}`));
-  }
+  const lines = ['❌ Validation errors found:\n'];
 
-  if (result.empty.length > 0) {
-    lines.push(`  Empty values (${result.empty.length}):`);
-    result.empty.forEach((k) => lines.push(`    ! ${k}`));
+  for (const [file, issues] of Object.entries(results)) {
+    lines.push(`  ${file}:`);
+    for (const issue of issues) {
+      lines.push(`    - [${issue.type}] ${issue.key}: ${issue.message}`);
+    }
   }
 
   return lines.join('\n');
 }
 
 /**
- * Format a diff between two envs into a readable string.
- * @param {Record<string, string>} envA
- * @param {Record<string, string>} envB
- * @param {string} [labelA='A']
- * @param {string} [labelB='B']
+ * Format a diff result for human-readable output
+ * @param {object} diff - output from diffEnvs
+ * @param {object} [options]
+ * @param {string} [options.from] - label for the base env
+ * @param {string} [options.to] - label for the comparison env
  * @returns {string}
  */
-function formatDiff(envA, envB, labelA = 'A', labelB = 'B') {
-  const diff = diffEnvs(envA, envB);
-  const lines = [`Diff [${labelA}] → [${labelB}]`];
+function formatDiff(diff, options = {}) {
+  const from = options.from || 'base';
+  const to = options.to || 'compare';
+  const lines = [`Diff (${from} → ${to}):\n`];
+
+  if (diff.added.length === 0 && diff.removed.length === 0 && diff.changed.length === 0) {
+    return `✅ No differences between ${from} and ${to}.`;
+  }
 
   if (diff.added.length > 0) {
-    lines.push(`  Added in ${labelB}:`);
-    diff.added.forEach((k) => lines.push(`    + ${k}=${envB[k]}`));
+    lines.push('  Added:');
+    diff.added.forEach(k => lines.push(`    + ${k}`));
   }
 
   if (diff.removed.length > 0) {
-    lines.push(`  Removed from ${labelA}:`);
-    diff.removed.forEach((k) => lines.push(`    - ${k}=${envA[k]}`));
+    lines.push('  Removed:');
+    diff.removed.forEach(k => lines.push(`    - ${k}`));
   }
 
   if (diff.changed.length > 0) {
     lines.push('  Changed:');
-    diff.changed.forEach((k) =>
-      lines.push(`    ~ ${k}: "${envA[k]}" → "${envB[k]}"`)
-    );
-  }
-
-  if (diff.added.length === 0 && diff.removed.length === 0 && diff.changed.length === 0) {
-    lines.push('  No differences found.');
+    diff.changed.forEach(k => lines.push(`    ~ ${k}`));
   }
 
   return lines.join('\n');
 }
 
-module.exports = { formatValidation, formatDiff };
+/**
+ * Format a snapshot diff result
+ * @param {object} snapshotResult - output from diffAgainstSnapshot
+ * @param {string} envPath
+ * @returns {string}
+ */
+function formatSnapshotDiff(snapshotResult, envPath) {
+  const { diff, snapshotMeta } = snapshotResult;
+  const header = `Snapshot diff for ${envPath}\n  Snapshot taken: ${snapshotMeta.createdAt}\n`;
+  const body = formatDiff(diff, { from: 'snapshot', to: 'current' });
+  return `${header}\n${body}`;
+}
+
+module.exports = { formatValidation, formatDiff, formatSnapshotDiff };
