@@ -38,4 +38,18 @@ function formatMerge({ merged, conflicts, files = [] }) {
   return lines.join('\n');
 }
 
-module.exports = { formatMerge };
+/**
+ * Format a merge result as a summary line (single line, no detail).
+ * Useful for logging or compact output modes.
+ * @param {{ merged: Object, conflicts: Object, files: string[] }} param0
+ * @returns {string}
+ */
+function formatMergeSummary({ merged, conflicts, files = [] }) {
+  const totalKeys = Object.keys(merged).length;
+  const conflictCount = Object.keys(conflicts).length;
+  const fileLabel = files.length ? files.join(' + ') : 'unknown';
+  const status = conflictCount === 0 ? '✔ clean' : `⚠ ${conflictCount} conflict(s)`;
+  return `[${fileLabel}] ${totalKeys} key(s) merged — ${status}`;
+}
+
+module.exports = { formatMerge, formatMergeSummary };
