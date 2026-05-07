@@ -48,4 +48,20 @@ function parseEnv(content) {
   return result;
 }
 
-module.exports = { parseEnv };
+/**
+ * Serialize a key-value map back into .env file content.
+ * @param {Record<string, string>} env - Key-value pairs to serialize
+ * @returns {string} Formatted .env file content
+ */
+function stringifyEnv(env) {
+  return Object.entries(env)
+    .map(([key, value]) => {
+      // Quote values that contain spaces or special characters
+      const needsQuotes = /[\s#"'\\]/.test(value);
+      const serializedValue = needsQuotes ? `"${value.replace(/"/g, '\\"')}"` : value;
+      return `${key}=${serializedValue}`;
+    })
+    .join('\n');
+}
+
+module.exports = { parseEnv, stringifyEnv };
