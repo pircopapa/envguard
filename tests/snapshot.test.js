@@ -32,6 +32,14 @@ describe('saveSnapshot', () => {
     expect(data.keys).toHaveProperty('PORT', '3000');
   });
 
+  test('snapshot includes a timestamp', () => {
+    const snapshotDir = path.join(tmpDir, 'snapshots');
+    const snapshotPath = saveSnapshot(envFile, snapshotDir);
+    const data = JSON.parse(fs.readFileSync(snapshotPath, 'utf-8'));
+    expect(data).toHaveProperty('timestamp');
+    expect(new Date(data.timestamp).getTime()).not.toBeNaN();
+  });
+
   test('throws if env file does not exist', () => {
     expect(() => saveSnapshot('/nonexistent/.env')).toThrow('Env file not found');
   });
