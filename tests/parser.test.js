@@ -45,4 +45,14 @@ describe('parseEnv', () => {
     const result = parseEnv('FOO=bar\r\nBAZ=qux');
     expect(result).toEqual({ FOO: 'bar', BAZ: 'qux' });
   });
+
+  test('does not strip inline comments from quoted values', () => {
+    const result = parseEnv('KEY="value # not a comment"');
+    expect(result).toEqual({ KEY: 'value # not a comment' });
+  });
+
+  test('returns empty object for empty input', () => {
+    const result = parseEnv('');
+    expect(result).toEqual({});
+  });
 });
