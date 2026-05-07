@@ -19,6 +19,12 @@ describe('isSensitiveKey', () => {
     expect(isSensitiveKey('NODE_ENV')).toBe(false);
     expect(isSensitiveKey('APP_NAME')).toBe(false);
   });
+
+  it('is case-insensitive', () => {
+    expect(isSensitiveKey('db_password')).toBe(true);
+    expect(isSensitiveKey('Api_Key')).toBe(true);
+    expect(isSensitiveKey('Auth_Token')).toBe(true);
+  });
 });
 
 describe('redactValue', () => {
@@ -40,6 +46,13 @@ describe('redactEnv', () => {
     expect(redacted.PORT).toBe('3000');
     expect(redacted.DB_PASSWORD).not.toBe('hunter2');
     expect(redacted.API_KEY).not.toBe('abc123xyz');
+  });
+
+  it('does not mutate the original env object', () => {
+    const env = { DB_PASSWORD: 'hunter2', PORT: '3000' };
+    const redacted = redactEnv(env);
+    expect(env.DB_PASSWORD).toBe('hunter2');
+    expect(redacted.DB_PASSWORD).not.toBe('hunter2');
   });
 });
 
