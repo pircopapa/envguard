@@ -52,4 +52,20 @@ function mergeStrict(...envObjects) {
   return merged;
 }
 
-module.exports = { mergeEnvs, isCleanMerge, mergeStrict };
+/**
+ * Returns a human-readable summary of conflicts from a merge result.
+ * Useful for logging or displaying conflict details to the user.
+ *
+ * @param {{ conflicts: Object }} mergeResult
+ * @returns {string}
+ */
+function formatConflicts({ conflicts }) {
+  if (isCleanMerge({ conflicts })) {
+    return 'No conflicts.';
+  }
+  return Object.entries(conflicts)
+    .map(([key, values]) => `  ${key}: [${values.map(v => JSON.stringify(v)).join(' → ')}]`)
+    .join('\n');
+}
+
+module.exports = { mergeEnvs, isCleanMerge, mergeStrict, formatConflicts };
