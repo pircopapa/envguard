@@ -10,7 +10,7 @@ const { resolveFile } = require('./cli');
 /**
  * Print a typecast summary for a given .env file.
  * @param {string} filePath
- * @param {{diff: boolean}} options
+ * @param {{diff: boolean, quiet: boolean}} options
  */
 async function cmdTypecast(filePath, options = {}) {
   const resolved = resolveFile(filePath);
@@ -22,13 +22,17 @@ async function cmdTypecast(filePath, options = {}) {
     process.exit(1);
   }
 
-  if (options.diff) {
-    console.log(formatTypecastDiff(env));
-  } else {
-    console.log(formatTypecastSummary(env));
+  const result = typecastEnv(env);
+
+  if (!options.quiet) {
+    if (options.diff) {
+      console.log(formatTypecastDiff(env));
+    } else {
+      console.log(formatTypecastSummary(env));
+    }
   }
 
-  return typecastEnv(env);
+  return result;
 }
 
 /**
@@ -40,8 +44,9 @@ function registerTypecastCommand(program) {
     .command('typecast <file>')
     .description('Show how .env string values would be cast to native types')
     .option('-d, --diff', 'show diff-style output of type changes')
+    .option('-q, --quiet', 'suppress output, only return the result')
     .action(async (file, opts) => {
-      await cmdTypecast(file, { diff: !!opts.diff });
+      await cmdTypecast(file, { diff: !!opts.diff, quiet: !!opts.quiet });
     });
 }
 
