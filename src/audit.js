@@ -19,6 +19,9 @@ const RISKY_VALUE_PATTERNS = [
   { pattern: /localhost|127\.0\.0\.1/, label: 'localhost value', keyPattern: null },
 ];
 
+/** Placeholder values that indicate a key hasn't been properly configured */
+const PLACEHOLDER_VALUES = new Set(['', 'changeme', 'todo', 'placeholder', 'fixme', 'replace_me']);
+
 /**
  * @param {string} key
  * @param {string} value
@@ -28,7 +31,7 @@ function auditEntry(key, value) {
   const findings = [];
 
   for (const { pattern, label } of SENSITIVE_PATTERNS) {
-    if (pattern.test(key) && (value === '' || value === 'changeme' || value === 'todo')) {
+    if (pattern.test(key) && PLACEHOLDER_VALUES.has(value.toLowerCase())) {
       findings.push({ key, issue: `Sensitive key (${label}) has placeholder or empty value` });
     }
   }
@@ -65,4 +68,19 @@ function isCleanAudit(envObj) {
   return auditEnv(envObj).length === 0;
 }
 
-module.exports = { auditEnv, isCleanAudit };
+/**
+ * Returns a summary of audit results grouped by issue type.
+ * @param {Record<string, string>} envObj
+ * @returns {Record<string, string[]>} Map of issue label to affected keys
+ */
+function auditSummary(envObj) {
+  const findings = auditEnv(envObj);
+  const summary = {};
+  for (const { key, issue } of findings) {
+    if (!summary[issue]) summary[issue] = [];
+    summary[issue].push(key);
+  }
+  return summary;
+}
+
+module.exports = { auditEnv, isCleanAudit, auditSummary };
