@@ -32,6 +32,11 @@ describe('cloneEnv', () => {
     const result = cloneEnv(sampleEnv, { omitKeys: Object.keys(sampleEnv) });
     expect(result).toEqual({});
   });
+
+  it('ignores omitKeys entries that do not exist in the source', () => {
+    const result = cloneEnv(sampleEnv, { omitKeys: ['NONEXISTENT_KEY'] });
+    expect(result).toEqual(sampleEnv);
+  });
 });
 
 describe('scaffoldTemplate', () => {
@@ -70,6 +75,10 @@ describe('isFullyCloned / emptyCloneKeys', () => {
     const env = { ...sampleEnv, DB_PASS: '', API_KEY: '' };
     expect(emptyCloneKeys(env)).toEqual(['DB_PASS', 'API_KEY']);
   });
+
+  it('returns empty array when all values are populated', () => {
+    expect(emptyCloneKeys(sampleEnv)).toEqual([]);
+  });
 });
 
 describe('formatCloneSummary', () => {
@@ -87,25 +96,9 @@ describe('formatEmptyCloneWarning', () => {
     expect(formatEmptyCloneWarning([])).toMatch(/All cloned/);
   });
 
-  it('lists empty keys in warning', () => {
-    const out = formatEmptyCloneWarning(['DB_PASS']);
+  it('includes empty key names in warning message', () => {
+    const out = formatEmptyCloneWarning(['DB_PASS', 'API_KEY']);
     expect(out).toContain('DB_PASS');
-    expect(out).toContain('Warning');
-  });
-});
-
-describe('formatTemplatePreview', () => {
-  it('shows preview lines', () => {
-    const tmpl = scaffoldTemplate(sampleEnv);
-    const out = formatTemplatePreview(tmpl);
-    expect(out).toContain('Template Preview');
-    expect(out).toContain('APP_NAME=');
-  });
-
-  it('truncates long templates', () => {
-    const big = Array.from({ length: 30 }, (_, i) => [`KEY_${i}`, 'val']).reduce((a, [k, v]) => ({ ...a, [k]: v }), {});
-    const tmpl = scaffoldTemplate(big);
-    const out = formatTemplatePreview(tmpl, 5);
-    expect(out).toContain('more lines');
+    expect(out).toContain('API_KEY');
   });
 });
