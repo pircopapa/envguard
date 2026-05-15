@@ -78,6 +78,20 @@ function pinSummary(env, pins) {
   };
 }
 
+/**
+ * Formats drifted pin results into human-readable strings.
+ * Useful for logging or CLI output when pin checks fail.
+ * @param {Object} env
+ * @param {Object} pins
+ * @returns {string[]} Array of formatted drift messages
+ */
+function formatDriftMessages(env, pins) {
+  return driftedKeys(env, pins).map(({ key, expected, actual }) => {
+    const actualDisplay = actual === null ? '(not set)' : JSON.stringify(actual);
+    return `${key}: expected ${JSON.stringify(expected)}, got ${actualDisplay}`;
+  });
+}
+
 module.exports = {
   buildPinMap,
   checkPinnedKey,
@@ -85,4 +99,5 @@ module.exports = {
   isCleanPin,
   driftedKeys,
   pinSummary,
+  formatDriftMessages,
 };
